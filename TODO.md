@@ -52,6 +52,39 @@
 - [ ] Set env vars trên Vercel
 - [ ] Test checkout flow end-to-end
 
+## Owner Tasks (Manual — Không cần code)
+
+### Branding & Infrastructure
+- [ ] Mua domain (gợi ý: `rulebase.dev` ~$12/năm trên Cloudflare/Namecheap)
+- [ ] Setup email `hello@rulebase.dev` (Cloudflare Email Routing free → forward về Gmail cá nhân)
+- [ ] Tạo GitHub org (ví dụ: `rulebase-dev`) → transfer repo từ `dnd21052002/rule-base` sang org
+- [ ] Trỏ domain về Vercel (Add domain trong Vercel dashboard → cập nhật DNS)
+- [ ] Cập nhật `AUTH_URL` env var trên Vercel thành domain mới
+
+### OAuth Apps
+- [ ] Tạo lại GitHub OAuth App dưới org mới, callback URL = `https://rulebase.dev/api/auth/callback/github`
+- [ ] Cập nhật Google OAuth App: thêm `https://rulebase.dev` vào Authorized redirect URIs
+- [ ] Cập nhật env vars trên Vercel với OAuth credentials mới
+
+### Lemon Squeezy
+- [ ] Verify store trên Lemon Squeezy (cần ID/passport + địa chỉ)
+- [ ] Tạo product "RuleBase Pro" — $5/mo recurring
+- [ ] Lấy: API Key, Store ID, Pro Variant ID
+- [ ] Tạo Webhook → URL: `https://rulebase.dev/api/lemonsqueezy/webhook`
+  - Events: `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired`
+- [ ] Lấy Webhook Secret
+- [ ] Set 4 env vars trên Vercel:
+  - `LEMON_SQUEEZY_API_KEY`
+  - `LEMON_SQUEEZY_STORE_ID`
+  - `LEMON_SQUEEZY_PRO_VARIANT_ID`
+  - `LEMON_SQUEEZY_WEBHOOK_SECRET`
+
+### Social & Marketing
+- [ ] Tạo Twitter/X account cho RuleBase
+- [ ] Tạo Discord server cho community
+- [ ] Viết launch post trên Twitter, Reddit (r/webdev, r/nextjs), Hacker News
+- [ ] Submit lên Product Hunt khi có đủ rules
+
 ## Backlog (Later)
 
 - [ ] Private rules (Pro only)
