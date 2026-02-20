@@ -15,7 +15,7 @@ export async function getOrCreateStripeCustomer(userId: string) {
     return user.stripeCustomerId;
   }
 
-  const customer = await stripe.customers.create({
+  const customer = await stripe().customers.create({
     email: user.email,
     name: user.name ?? undefined,
     metadata: { userId: user.id },
@@ -32,7 +32,7 @@ export async function getOrCreateStripeCustomer(userId: string) {
 export async function createCheckoutSession(userId: string) {
   const customerId = await getOrCreateStripeCustomer(userId);
 
-  return stripe.checkout.sessions.create({
+  return stripe().checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
     payment_method_types: ["card"],
@@ -51,7 +51,7 @@ export async function createCheckoutSession(userId: string) {
 export async function createBillingPortalSession(userId: string) {
   const customerId = await getOrCreateStripeCustomer(userId);
 
-  return stripe.billingPortal.sessions.create({
+  return stripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: `${process.env.AUTH_URL}/dashboard`,
   });

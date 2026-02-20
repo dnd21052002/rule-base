@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 
-import { stripe } from "@/lib/stripe";
+import { stripe as getStripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { subscriptions, users } from "@/lib/db/schema";
 
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!,
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.mode === "subscription" && session.subscription) {
-        const sub = await stripe.subscriptions.retrieve(
+        const sub = await getStripe().subscriptions.retrieve(
           session.subscription as string,
         );
         const userId = session.metadata?.userId;
