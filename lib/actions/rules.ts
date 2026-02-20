@@ -1,0 +1,59 @@
+"use server";
+
+import { eq, sql, and } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+
+import { db } from "@/lib/db";
+import { ratings, rules } from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
+import { rateRuleSchema } from "@/lib/validators/rules";
+
+export async function rateRule(ruleId: string, score: number) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be signed in to rate" };
+  }
+
+  const parsed = rateRuleSchema.safeParse({ score });
+  if (!parsed.success) {
+    return { error: "Score must be between 1 and 5" };
+  }
+
+  await db
+    .insert(ratings)
+    .values({
+      userId: session.user.id,
+      ruleId,
+      score: parsed.data.score,
+    })
+    .onConflictDoUpdate({
+      target: [ratings.userId, ratings.ruleId],
+      set: { score: parsed.data.score },
+    });
+
+  const [result] = await db
+    .select({
+      avg: sql<number>`avg(${ratings.score})::real`,
+      count: sql<number>`count(*)`,
+    })
+    .from(ratings)
+    .where(eq(ratings.ruleId, ruleId));
+
+  await db
+    .update(rules)
+    .set({
+      avgRating: Number(result.avg) || 0,
+      ratingCount: Number(result.count) || 0,
+    })
+    .where(eq(rules.id, ruleId));
+
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function trackCopy(ruleId: string) {
+  await db
+    .update(rules)
+    .set({ copyCount: sql`${rules.copyCount} + 1` })
+    .where(eq(rules.id, ruleId));
+}
