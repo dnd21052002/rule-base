@@ -7,6 +7,14 @@ import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { subscriptions, users } from "@/lib/db/schema";
 
+function getSubPeriod(sub: Stripe.Subscription) {
+  const item = sub.items.data[0];
+  return {
+    start: new Date(item.current_period_start * 1000),
+    end: new Date(item.current_period_end * 1000),
+  };
+}
+
 export async function POST(req: Request) {
   const body = await req.text();
   const headersList = await headers();
@@ -37,13 +45,15 @@ export async function POST(req: Request) {
         const userId = session.metadata?.userId;
         if (!userId) break;
 
+        const period = getSubPeriod(sub);
+
         await db.insert(subscriptions).values({
           userId,
           stripeSubscriptionId: sub.id,
           stripePriceId: sub.items.data[0].price.id,
           status: "active",
-          currentPeriodStart: new Date(sub.current_period_start * 1000),
-          currentPeriodEnd: new Date(sub.current_period_end * 1000),
+          currentPeriodStart: period.start,
+          currentPeriodEnd: period.end,
           cancelAtPeriodEnd: sub.cancel_at_period_end,
         });
 
@@ -63,19 +73,21 @@ export async function POST(req: Request) {
       if (!existing) break;
 
       const status = sub.status as typeof existing.status;
+      const period = getSubPeriod(sub);
 
       await db
         .update(subscriptions)
         .set({
           status,
           stripePriceId: sub.items.data[0].price.id,
-          currentPeriodStart: new Date(sub.current_period_start * 1000),
-          currentPeriodEnd: new Date(sub.current_period_end * 1000),
+          currentPeriodStart: period.start,
+          currentPeriodEnd: period.end,
           cancelAtPeriodEnd: sub.cancel_at_period_end,
         })
         .where(eq(subscriptions.stripeSubscriptionId, sub.id));
 
-      const plan = status === "active" || status === "trialing" ? "pro" : "free";
+      const plan =
+        status === "active" || status === "trialing" ? "pro" : "free";
       await db
         .update(users)
         .set({ plan })
