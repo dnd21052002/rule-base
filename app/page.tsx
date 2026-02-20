@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Header } from "@/components/header";
 import { HeroSection } from "@/components/hero-section";
 import { HowItWorks } from "@/components/how-it-works";
 import { FeaturedRules } from "@/components/featured-rules";
@@ -9,7 +8,6 @@ import { CategoryPills } from "@/components/category-pills";
 import { PromptGrid } from "@/components/prompt-grid";
 import { PricingSection } from "@/components/pricing-section";
 import { CtaSection } from "@/components/cta-section";
-import { Footer } from "@/components/footer";
 import { type Category, rules } from "@/lib/data";
 
 export default function Home() {
@@ -36,10 +34,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
-
       <main className="flex-1">
-        {/* Hero with search */}
         <div className="mx-auto max-w-6xl px-6">
           <HeroSection
             searchQuery={searchQuery}
@@ -47,31 +42,26 @@ export default function Home() {
           />
         </div>
 
-        {/* How it works */}
         <div className="mx-auto max-w-6xl px-6">
           <HowItWorks />
         </div>
 
-        {/* Divider */}
         <div className="mx-auto max-w-6xl px-6">
           <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
         </div>
 
-        {/* Featured rules (hide when filtering) */}
         {!isFiltering && (
           <div className="mx-auto max-w-6xl px-6">
             <FeaturedRules rules={rules} />
           </div>
         )}
 
-        {/* Divider */}
         {!isFiltering && (
           <div className="mx-auto max-w-6xl px-6">
             <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
           </div>
         )}
 
-        {/* Category pills + grid */}
         <div className="mx-auto max-w-6xl px-6 pt-14">
           <CategoryPills
             selected={selectedCategory}
@@ -80,28 +70,22 @@ export default function Home() {
           <PromptGrid rules={filteredRules} />
         </div>
 
-        {/* Divider */}
         <div className="mx-auto max-w-6xl px-6">
           <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
         </div>
 
-        {/* Pricing */}
         <div className="mx-auto max-w-6xl px-6">
           <PricingSection />
         </div>
 
-        {/* Divider */}
         <div className="mx-auto max-w-6xl px-6">
           <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
         </div>
 
-        {/* CTA */}
         <div className="mx-auto max-w-6xl px-6">
           <CtaSection />
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

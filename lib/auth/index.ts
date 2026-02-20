@@ -7,11 +7,21 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import {
+  users,
+  accounts,
+  sessions,
+  verificationTokens,
+} from "@/lib/db/schema";
 import { signInSchema } from "@/lib/validators/auth";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: DrizzleAdapter(db),
+  adapter: DrizzleAdapter(db, {
+    usersTable: users,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+  }),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/sign-in",

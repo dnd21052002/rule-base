@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Github, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/user-menu";
+import { auth } from "@/lib/auth";
 
 const navItems = [
   { label: "How it works", href: "#how-it-works" },
@@ -9,7 +11,9 @@ const navItems = [
   { label: "Pricing", href: "#pricing" },
 ];
 
-export function Header() {
+export async function Header() {
+  const session = await auth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-background/60 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
@@ -44,12 +48,23 @@ export function Header() {
             </a>
           </Button>
           <div className="mx-1 h-4 w-px bg-white/[0.08]" />
-          <Button variant="ghost" size="sm" className="text-[13px] text-muted-foreground" asChild>
-            <Link href="/sign-in">Sign In</Link>
-          </Button>
-          <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 text-[13px] text-white shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500" asChild>
-            <a href="#pricing">Get Started</a>
-          </Button>
+
+          {session?.user ? (
+            <UserMenu
+              name={session.user.name}
+              image={session.user.image}
+              email={session.user.email}
+            />
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" className="text-[13px] text-muted-foreground" asChild>
+                <Link href="/sign-in">Sign In</Link>
+              </Button>
+              <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 text-[13px] text-white shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500" asChild>
+                <a href="#pricing">Get Started</a>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { ArrowLeft, Github, Loader2, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,11 +22,37 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleOAuth(provider: "github" | "google") {
+    setOauthLoading(provider);
+    setError(null);
+    await signIn(provider, { callbackUrl: "/" });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 2000);
+    setError(null);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        window.location.href = "/";
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -63,20 +90,39 @@ export default function SignInPage() {
           </div>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-center text-[13px] text-red-400">
+            {error}
+          </div>
+        )}
+
         {/* OAuth buttons */}
         <div className="space-y-2.5">
           <Button
             variant="outline"
             className="h-10 w-full gap-2.5 border-white/[0.08] bg-white/[0.03] text-[13px] font-medium hover:bg-white/[0.06]"
+            onClick={() => handleOAuth("github")}
+            disabled={oauthLoading !== null}
           >
-            <Github className="size-4" />
+            {oauthLoading === "github" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Github className="size-4" />
+            )}
             Sign in with GitHub
           </Button>
           <Button
             variant="outline"
             className="h-10 w-full gap-2.5 border-white/[0.08] bg-white/[0.03] text-[13px] font-medium hover:bg-white/[0.06]"
+            onClick={() => handleOAuth("google")}
+            disabled={oauthLoading !== null}
           >
-            <GoogleIcon className="size-4" />
+            {oauthLoading === "google" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <GoogleIcon className="size-4" />
+            )}
             Sign in with Google
           </Button>
         </div>
