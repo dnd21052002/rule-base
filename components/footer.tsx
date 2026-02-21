@@ -1,4 +1,5 @@
 import { Github, Terminal, Twitter } from "lucide-react";
+import Image from "next/image";
 
 const footerLinks = {
   Product: ["Browse Rules", "Submit Rule", "API", "Changelog"],
@@ -19,7 +20,7 @@ export function Footer() {
                 className="flex size-7 items-center justify-center rounded-md"
                 style={{ background: 'linear-gradient(to bottom right, rgb(139, 92, 246), rgb(79, 70, 229))' }}
               >
-                <Terminal className="size-3.5 text-white" />
+                <Image src="/icon.png" alt="RuleBase" width={28} height={28} className="size-7 rounded-md shadow-lg shadow-violet-500/20" />
               </div>
               <span className="text-[15px] font-semibold tracking-tight">
                 RuleBase

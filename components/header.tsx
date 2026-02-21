@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Crown, Github, Terminal } from "lucide-react";
+import Image from "next/image";
+import { Crown, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserMenu } from "@/components/user-menu";
@@ -21,12 +22,13 @@ export async function Header() {
     <header className="header-bg sticky top-0 z-50 w-full border-b border-border backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-          <div
-            className="flex size-7 items-center justify-center rounded-md shadow-lg shadow-violet-500/20"
-            style={{ background: 'linear-gradient(to bottom right, rgb(139, 92, 246), rgb(79, 70, 229))' }}
-          >
-            <Terminal className="size-3.5 text-white" />
-          </div>
+          <Image
+            src="/icon.png"
+            alt="RuleBase"
+            width={28}
+            height={28}
+            className="size-7 rounded-md shadow-lg shadow-violet-500/20"
+          />
           <span className="text-[15px] font-semibold tracking-tight">RuleBase</span>
         </Link>
 
