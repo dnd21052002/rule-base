@@ -246,12 +246,12 @@ function SignInContent() {
               >
                 Password
               </label>
-              <a
-                href="#"
+              <Link
+                href="/forgot-password"
                 className="text-xs text-violet-500 transition-colors hover:text-violet-600 dark:text-violet-400 dark:hover:text-violet-300"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <Input
               id="password"

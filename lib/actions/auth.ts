@@ -6,9 +6,9 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { users, verificationTokens } from "@/lib/db/schema";
-import { signUpSchema, type SignUpInput } from "@/lib/validators/auth";
+import { signUpSchema, resetPasswordSchema, type SignUpInput } from "@/lib/validators/auth";
 import { verifyTurnstileToken } from "@/lib/turnstile";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail, sendPasswordResetEmail, getPasswordResetIdentifier } from "@/lib/email";
 
 export async function registerUser(
   input: SignUpInput,
@@ -123,5 +123,73 @@ export async function resendVerificationEmail(email: string) {
   if (!result.ok) {
     return { error: "Failed to send email" };
   }
+  return { success: true };
+}
+
+export async function requestPasswordReset(email: string) {
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email),
+    columns: { id: true },
+  });
+
+  if (!user) {
+    return { error: "No account found with this email" };
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 60 * 60 * 1000);
+  const identifier = getPasswordResetIdentifier(email);
+
+  await db.delete(verificationTokens).where(eq(verificationTokens.identifier, identifier));
+  await db.insert(verificationTokens).values({
+    identifier,
+    token,
+    expires,
+  });
+
+  const result = await sendPasswordResetEmail(email, token);
+  if (!result.ok) {
+    return { error: "Failed to send email" };
+  }
+  return { success: true };
+}
+
+export async function resetPassword(token: string, email: string, password: string) {
+  const parsed = resetPasswordSchema.safeParse({ password });
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors.password?.[0] ?? "Invalid password" };
+  }
+
+  const identifier = getPasswordResetIdentifier(email);
+  const record = await db.query.verificationTokens.findFirst({
+    where: and(
+      eq(verificationTokens.identifier, identifier),
+      eq(verificationTokens.token, token)
+    ),
+  });
+
+  if (!record || new Date() > record.expires) {
+    return { error: "Invalid or expired link" };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12);
+
+  await db
+    .update(users)
+    .set({
+      passwordHash,
+      emailVerified: new Date(),
+    })
+    .where(eq(users.email, email));
+
+  await db
+    .delete(verificationTokens)
+    .where(
+      and(
+        eq(verificationTokens.identifier, identifier),
+        eq(verificationTokens.token, token)
+      )
+    );
+
   return { success: true };
 }
