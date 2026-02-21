@@ -1,12 +1,14 @@
 "use server";
 
+import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, verificationTokens } from "@/lib/db/schema";
 import { signUpSchema, type SignUpInput } from "@/lib/validators/auth";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function registerUser(
   input: SignUpInput,
@@ -44,7 +46,82 @@ export async function registerUser(
     name,
     email,
     passwordHash,
+    emailVerified: null,
   });
 
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await db.delete(verificationTokens).where(eq(verificationTokens.identifier, email));
+  await db.insert(verificationTokens).values({
+    identifier: email,
+    token,
+    expires,
+  });
+
+  const emailResult = await sendVerificationEmail(email, token);
+  if (!emailResult.ok) {
+    return { error: { _form: ["Failed to send verification email. Please try again."] } };
+  }
+
+  return { success: true };
+}
+
+export async function verifyEmailToken(token: string, email: string) {
+  const record = await db.query.verificationTokens.findFirst({
+    where: and(
+      eq(verificationTokens.identifier, email),
+      eq(verificationTokens.token, token)
+    ),
+  });
+
+  if (!record || new Date() > record.expires) {
+    return { error: "Invalid or expired link" };
+  }
+
+  await db
+    .update(users)
+    .set({ emailVerified: new Date() })
+    .where(eq(users.email, email));
+
+  await db
+    .delete(verificationTokens)
+    .where(
+      and(
+        eq(verificationTokens.identifier, email),
+        eq(verificationTokens.token, token)
+      )
+    );
+
+  return { success: true };
+}
+
+export async function resendVerificationEmail(email: string) {
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email),
+    columns: { emailVerified: true },
+  });
+
+  if (!user) {
+    return { error: "User not found" };
+  }
+  if (user.emailVerified) {
+    return { error: "Email already verified" };
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await db.delete(verificationTokens).where(eq(verificationTokens.identifier, email));
+  await db.insert(verificationTokens).values({
+    identifier: email,
+    token,
+    expires,
+  });
+
+  const result = await sendVerificationEmail(email, token);
+  if (!result.ok) {
+    return { error: "Failed to send email" };
+  }
   return { success: true };
 }

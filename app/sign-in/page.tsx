@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { resendVerificationEmail } from "@/lib/actions/auth";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -30,14 +31,34 @@ function getSafeCallbackUrl(raw: string | null): string {
 function SignInContent() {
   const searchParams = useSearchParams();
   const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"));
+  const urlCode = searchParams.get("code");
+  const urlError = searchParams.get("error");
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("signin_email");
+      sessionStorage.removeItem("signin_email");
+      return saved ?? "";
+    }
+    return "";
+  });
   const [password, setPassword] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const turnstileKey = useRef(0);
+
+  useEffect(() => {
+    if (urlError === "CredentialsSignin") {
+      setError(
+        urlCode === "EMAIL_NOT_VERIFIED"
+          ? "Please verify your email first. Check your inbox for the verification link."
+          : "Invalid email or password"
+      );
+    }
+  }, [urlError, urlCode]);
 
   async function handleOAuth(provider: "github" | "google") {
     setOauthLoading(provider);
@@ -66,27 +87,27 @@ function SignInContent() {
     }
 
     setIsLoading(true);
+    sessionStorage.setItem("signin_email", email);
 
-    try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+    const result = await signIn("credentials", {
+      email,
+      password,
+      callbackUrl,
+      redirect: false,
+    });
 
-      if (result?.error) {
-        setError("Invalid email or password");
-        setTurnstileToken(null);
-        turnstileKey.current += 1;
-      } else {
-        window.location.href = callbackUrl;
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-      setTurnstileToken(null);
-      turnstileKey.current += 1;
-    } finally {
-      setIsLoading(false);
+    setIsLoading(false);
+
+    if (result?.ok && result?.url) {
+      window.location.href = result.url;
+      return;
+    }
+    if (result?.error === "CredentialsSignin") {
+      setError(
+        result.code === "EMAIL_NOT_VERIFIED"
+          ? "Please verify your email first. Check your inbox for the verification link."
+          : "Invalid email or password"
+      );
     }
   }
 
@@ -128,10 +149,33 @@ function SignInContent() {
           </div>
         </div>
 
-        {/* Error message */}
+        {/* Error / success message */}
         {error && (
-          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-center text-[13px] text-red-600 dark:text-red-400">
+          <div className={`mb-4 rounded-lg px-3 py-2 text-center text-[13px] ${
+            error.includes("Verification email sent")
+              ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              : "border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400"
+          }`}>
             {error}
+            {error.includes("verify your email") && email && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setResendLoading(true);
+                  const res = await resendVerificationEmail(email);
+                  setResendLoading(false);
+                  if (res?.success) {
+                    setError("Verification email sent! Check your inbox.");
+                  } else {
+                    setError(res?.error ?? error);
+                  }
+                }}
+                disabled={resendLoading}
+                className="mt-2 block w-full text-xs font-medium text-violet-500 underline hover:text-violet-600"
+              >
+                {resendLoading ? "Sending..." : "Resend verification email"}
+              </button>
+            )}
           </div>
         )}
 

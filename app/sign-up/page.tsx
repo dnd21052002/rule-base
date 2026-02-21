@@ -35,6 +35,7 @@ function SignUpContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [verifyEmailSent, setVerifyEmailSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -48,24 +49,33 @@ function SignUpContent() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setIsLoading(true);
     setFieldErrors({});
 
-    const result = await registerUser({ name, email, password });
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (siteKey && !turnstileToken) {
+      setFieldErrors({ _form: ["Please complete the verification."] });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const result = await registerUser(
+      { name, email, password },
+      turnstileToken ?? undefined
+    );
 
     if (result?.error) {
       setFieldErrors(result.error);
+      setTurnstileToken(null);
+      turnstileKey.current += 1;
       setIsLoading(false);
       return;
     }
 
     if (result?.success) {
-      await signIn("credentials", {
-        email,
-        password,
-        callbackUrl,
-      });
+      setVerifyEmailSent(true);
     }
+    setIsLoading(false);
   }
 
   const hasError = Object.keys(fieldErrors).length > 0;
@@ -114,14 +124,30 @@ function SignUpContent() {
           </div>
         </div>
 
+        {/* Success: Check your email */}
+        {verifyEmailSent && (
+          <div className="mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-4 text-center">
+            <p className="text-[13px] font-medium text-emerald-600 dark:text-emerald-400">
+              Check your email
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              We sent a verification link to <strong>{email}</strong>. Click the link to activate your account.
+            </p>
+            <Button variant="outline" size="sm" className="mt-3 border-border" asChild>
+              <Link href="/sign-in">Go to Sign In</Link>
+            </Button>
+          </div>
+        )}
+
         {/* Error message */}
-        {errorMessage && (
+        {!verifyEmailSent && errorMessage && (
           <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-center text-[13px] text-red-600 dark:text-red-400">
             {errorMessage}
           </div>
         )}
 
-        {/* OAuth buttons */}
+        {/* OAuth buttons - hide when verify email sent */}
+        {!verifyEmailSent && (
         <div className="space-y-2.5">
           <Button
             variant="outline"
@@ -150,7 +176,10 @@ function SignUpContent() {
             Sign up with Google
           </Button>
         </div>
+        )}
 
+        {!verifyEmailSent && (
+        <>
         {/* Divider */}
         <div className="my-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
@@ -240,6 +269,8 @@ function SignUpContent() {
             )}
           </Button>
         </form>
+        </>
+        )}
 
         {/* Sign in link */}
         <p className="mt-6 text-center text-[13px] text-muted-foreground">

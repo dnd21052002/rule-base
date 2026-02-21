@@ -23,8 +23,10 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  const plan = await getUserPlan(session.user.id);
-  const subscription = await getUserSubscription(session.user.id);
+  const [plan, subscription] = await Promise.all([
+    getUserPlan(session.user.id),
+    getUserSubscription(session.user.id),
+  ]);
   const isPro = plan === "pro";
 
   const stats = [
