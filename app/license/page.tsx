@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata = {
   title: "License — RuleBase",
   description: "License information for RuleBase and its content.",
+  alternates: { canonical: `${baseUrl}/license` },
+  openGraph: {
+    title: "License — RuleBase",
+    description: "License information for RuleBase and its content.",
+    url: `${baseUrl}/license`,
+  },
 };
 
 export default function LicensePage() {

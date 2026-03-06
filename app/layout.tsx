@@ -18,10 +18,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata: Metadata = {
-  title: "RuleBase — AI Editor Prompt Directory",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "RuleBase — AI Editor Prompt Directory",
+    template: "%s",
+  },
   description:
     "Discover, copy, and share high-quality system prompts for Cursor, Windsurf, Copilot, and more.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({

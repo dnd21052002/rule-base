@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { ArrowLeft, Code } from "lucide-react";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata = {
   title: "API Documentation — RuleBase",
   description: "REST API documentation for RuleBase. List, search, create, and manage rules.",
+  alternates: { canonical: `${baseUrl}/api-docs` },
+  openGraph: {
+    title: "API Documentation — RuleBase",
+    description: "REST API documentation for RuleBase. List, search, create, and manage rules.",
+    url: `${baseUrl}/api-docs`,
+  },
 };
 
 export default function ApiDocsPage() {

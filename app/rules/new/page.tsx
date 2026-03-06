@@ -1,9 +1,19 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getCategories } from "@/lib/rules";
 import { NewRuleForm } from "./new-rule-form";
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
+export const metadata: Metadata = {
+  title: "Submit a Rule — RuleBase",
+  description: "Share your system prompt with the RuleBase community. Submit a new rule for Cursor, Windsurf, and more.",
+  alternates: { canonical: `${baseUrl}/rules/new` },
+  robots: { index: false, follow: true },
+};
 
 export default async function NewRulePage() {
   const session = await auth();

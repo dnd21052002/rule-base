@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -22,6 +23,15 @@ import { formatCopyCount } from "@/lib/data";
 import { MyRulesList } from "./my-rules-list";
 import { CopyHistoryList } from "./copy-history-list";
 import { BookmarksList } from "./bookmarks-list";
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
+export const metadata: Metadata = {
+  title: "Dashboard — RuleBase",
+  description: "Your RuleBase dashboard. Manage rules, view copy history, and bookmarks.",
+  alternates: { canonical: `${baseUrl}/dashboard` },
+  robots: { index: false, follow: true },
+};
 
 export default async function DashboardPage() {
   const session = await auth();

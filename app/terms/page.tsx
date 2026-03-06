@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata = {
   title: "Terms of Service — RuleBase",
   description: "Terms of Service for RuleBase. Rules and guidelines for using our service.",
+  alternates: { canonical: `${baseUrl}/terms` },
+  openGraph: {
+    title: "Terms of Service — RuleBase",
+    description: "Terms of Service for RuleBase. Rules and guidelines for using our service.",
+    url: `${baseUrl}/terms`,
+  },
 };
 
 export default function TermsPage() {

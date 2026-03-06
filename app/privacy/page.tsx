@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata = {
   title: "Privacy Policy — RuleBase",
   description: "Privacy Policy for RuleBase. How we collect, use, and protect your data.",
+  alternates: { canonical: `${baseUrl}/privacy` },
+  openGraph: {
+    title: "Privacy Policy — RuleBase",
+    description: "Privacy Policy for RuleBase. How we collect, use, and protect your data.",
+    url: `${baseUrl}/privacy`,
+  },
 };
 
 export default function PrivacyPage() {

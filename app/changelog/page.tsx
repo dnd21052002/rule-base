@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata = {
   title: "Changelog — RuleBase",
   description: "What's new in RuleBase. Latest updates and releases.",
+  alternates: { canonical: `${baseUrl}/changelog` },
+  openGraph: {
+    title: "Changelog — RuleBase",
+    description: "What's new in RuleBase. Latest updates and releases.",
+    url: `${baseUrl}/changelog`,
+  },
 };
 
 const changelogEntries = [

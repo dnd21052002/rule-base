@@ -1,9 +1,25 @@
+import type { Metadata } from "next";
 import { HeroSection } from "@/components/hero-section";
 import { HowItWorks } from "@/components/how-it-works";
 import { FeaturedRules } from "@/components/featured-rules";
 import { RulesSection } from "@/components/rules-section";
 import { CtaSection } from "@/components/cta-section";
 import { getRules, getCategories } from "@/lib/rules";
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
+export const metadata: Metadata = {
+  title: "RuleBase — AI Editor Prompt Directory",
+  description:
+    "Discover, copy, and share high-quality system prompts for Cursor, Windsurf, Copilot, and more.",
+  alternates: { canonical: baseUrl },
+  openGraph: {
+    title: "RuleBase — AI Editor Prompt Directory",
+    description:
+      "Discover, copy, and share high-quality system prompts for Cursor, Windsurf, Copilot, and more.",
+    url: baseUrl,
+  },
+};
 
 export default async function Home({
   searchParams,
